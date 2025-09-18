@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+  <meta charset="UTF-8">
+  <title>Opravičilo za šolo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>Obrazec za opravičilo</h2>
+
+  <label>Ime in priimek:</label>
+  <select id="student">
+    <option value="Neli Vesel">Neli Vesel</option>
+    <option value="Zarja Vesel">Zarja Vesel</option>
+  </select>
+
+  <label>Razred:</label>
+  <input type="text" id="razred" readonly>
+
+  <label>Razredničarka:</label>
+  <input type="text" id="razrednicarka" readonly>
+
+  <label>Datum od:</label>
+  <input type="text" id="datum_od">
+
+  <label>Datum do:</label>
+  <input type="text" id="datum_do">
+
+  <label>Zaradi:</label>
+  <input type="text" id="vzrok">
+
+  <button class="btn" onclick="generiraj()">Generiraj opravičilo</button>
+
+  <label>Sestavljeno opravičilo:</label>
+  <textarea id="rezultat" readonly></textarea>
+
+  <script src="script.js"></script>
+</body>
+</html>
