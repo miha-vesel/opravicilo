@@ -2,37 +2,86 @@
 <html lang="sl">
 <head>
   <meta charset="UTF-8">
-  <title>Opravičilo za šolo</title>
+  <title>Opravičilo – uradno pismo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h2>Obrazec za opravičilo</h2>
+  <h2>Opravičilo – uradno pismo</h2>
 
-  <label>Ime in priimek:</label>
-  <select id="student">
-    <option value="Neli Vesel">Neli Vesel</option>
-    <option value="Zarja Vesel">Zarja Vesel</option>
-  </select>
+  <fieldset>
+    <legend>Podatki starša / pošiljatelja</legend>
+    <label>Ime in priimek:</label>
+    <input type="text" id="p_ime" value="Miha Vesel">
+    <label>Naslov – vrstica 1:</label>
+    <input type="text" id="p_naslov1" value="Ulica bratov Učakar 46">
+    <label>Naslov – vrstica 2 (pošta):</label>
+    <input type="text" id="p_naslov2" value="1000 Ljubljana">
+    <div class="row-2">
+      <div>
+        <label>Kraj na datumski vrstici:</label>
+        <input type="text" id="p_kraj" value="Ljubljana">
+      </div>
+      <div>
+        <label>Datum:</label>
+        <input type="text" id="p_datum" placeholder="dd.mm.llll (prazno = danes)">
+      </div>
+    </div>
+  </fieldset>
 
-  <label>Razred:</label>
-  <input type="text" id="razred" readonly>
+  <fieldset>
+    <legend>Prejemnik</legend>
+    <label>Razredničarka / naslovnik:</label>
+    <input type="text" id="r_ime" value="ga. Nina Brbot">
+    <label>Šola:</label>
+    <input type="text" id="r_sola" value="OŠ Koseze">
+    <label>Naslov šole:</label>
+    <input type="text" id="r_naslov" value="Ledarska 23">
+  </fieldset>
 
-  <label>Razredničarka:</label>
-  <input type="text" id="razrednicarka" readonly>
+  <fieldset>
+    <legend>Učenka in razlog</legend>
+    <label>Ime učenke:</label>
+    <select id="student">
+      <option value="Neli Vesel">Neli Vesel</option>
+      <option value="Zarja Vesel">Zarja Vesel</option>
+    </select>
 
-  <label>Datum od:</label>
-  <input type="text" id="datum_od">
+    <div class="row-2">
+      <div>
+        <label>Razred:</label>
+        <input type="text" id="razred">
+      </div>
+      <div>
+        <label>Razredničarka (auto):</label>
+        <input type="text" id="razrednicarka" readonly>
+      </div>
+    </div>
 
-  <label>Datum do:</label>
-  <input type="text" id="datum_do">
+    <div class="row-2">
+      <div>
+        <label>Datum od:</label>
+        <input type="text" id="datum_od" placeholder="dd.mm.llll">
+      </div>
+      <div>
+        <label>Datum do (neobvezno):</label>
+        <input type="text" id="datum_do" placeholder="dd.mm.llll">
+      </div>
+    </div>
 
-  <label>Zaradi:</label>
-  <input type="text" id="vzrok">
+    <label>Razlog (zaradi):</label>
+    <input type="text" id="vzrok" placeholder="npr. bolezen / zdravniški pregled / družinski razlogi">
+  </fieldset>
 
-  <button class="btn" onclick="generiraj()">Generiraj opravičilo</button>
+  <div class="btn-row">
+    <button class="btn primary" id="genBtn">Generiraj pismo</button>
+    <button class="btn" id="copyBtn" title="Kopiraj besedilo v odložišče">Kopiraj</button>
+    <button class="btn" id="pdfBtn" title="Shrani kot PDF (prek tiskanja)">Shrani kot PDF</button>
+    <span id="msg" aria-live="polite"></span>
+  </div>
 
-  <label>Sestavljeno opravičilo:</label>
-  <textarea id="rezultat" readonly></textarea>
+  <label>Predogled pisma:</label>
+  <div id="preview" class="letter-preview" contenteditable="false"></div>
 
   <script src="script.js"></script>
 </body>
