@@ -1,200 +1,203 @@
-// Meta za učenke -> razred in razredničarka
-const STUDENT_META = {
-  "Neli Vesel": { razred: "5.c", razrednicarka: "Nina Brbot" },
-  "Zarja Vesel": { razred: "2.b", razrednicarka: "Darija Peternelj" }
+// --- Helpers ---------------------------------------------------------------
+
+function formatDateSl(d) {
+  const day = d.getDate();
+  const month = d.getMonth() + 1;
+  const year = d.getFullYear();
+  return `${day}. ${month}. ${year}`;
+}
+
+function normalizeDateInput(str) {
+  if (!str) return '';
+  const m = str.match(/\s*(\d{1,2})\s*\.\s*(\d{1,2})\s*\.\s*(\d{4})\s*$/);
+  if (!m) return str.trim();
+  const d = Number(m[1]);
+  const mo = Number(m[2]);
+  const y = Number(m[3]);
+  return `${d}. ${mo}. ${y}`;
+}
+
+// --- Elements --------------------------------------------------------------
+
+const $ = (id) => document.getElementById(id);
+
+const p_ime       = $('p_ime');
+const p_naslov1   = $('p_naslov1');
+const p_naslov2   = $('p_naslov2');
+const p_kraj      = $('p_kraj');
+const p_datum     = $('p_datum');
+
+const r_ime       = $('r_ime');
+const r_sola      = $('r_sola');
+const r_naslov    = $('r_naslov');
+const r_posta = $('r_posta');
+
+const studentSel  = $('student');
+const razred      = $('razred');
+const razrednicarka = $('razrednicarka');
+
+const datum_od    = $('datum_od');
+const datum_do    = $('datum_do');
+const vzrok       = $('vzrok');
+
+const genBtn      = $('genBtn');
+const copyBtn     = $('copyBtn');
+const pdfBtn      = $('pdfBtn');
+const preview     = $('preview');
+const msg         = $('msg');
+
+// --- Student → defaults mapping -------------------------------------------
+// Add/adjust values here as needed.
+const teacherByStudent = {
+  'Neli Vesel': { razred: '5.c', razrednicarka: 'ga. Nina Brbot' },
+  'Zarja Vesel': { razred: '2.b', razrednicarka: 'ga. Darija Peternelj' },
 };
 
-// Elements
-const pIme = document.getElementById("p_ime");
-const pNaslov1 = document.getElementById("p_naslov1");
-const pNaslov2 = document.getElementById("p_naslov2");
-const pKraj = document.getElementById("p_kraj");
-const pDatum = document.getElementById("p_datum");
-
-const rIme = document.getElementById("r_ime");
-const rSola = document.getElementById("r_sola");
-const rNaslov = document.getElementById("r_naslov");
-
-const studentEl = document.getElementById("student");
-const razredEl = document.getElementById("razred");
-const razrednicarkaEl = document.getElementById("razrednicarka");
-
-const datumOdEl = document.getElementById("datum_od");
-const datumDoEl = document.getElementById("datum_do");
-const vzrokEl = document.getElementById("vzrok");
-
-const genBtn = document.getElementById("genBtn");
-const copyBtn = document.getElementById("copyBtn");
-const pdfBtn = document.getElementById("pdfBtn");
-const msgEl = document.getElementById("msg");
-const preview = document.getElementById("preview");
-
-// Helpers
-function todayStr() {
-  const d = new Date();
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  return `${dd}. ${mm}. ${yyyy}`;
-}
-function isEmpty(v){ return !v || !String(v).trim(); }
-
-function updateStudentMeta() {
-  const s = studentEl.value;
-  const meta = STUDENT_META[s] || { razred: "", razrednicarka: "" };
-  razredEl.value = meta.razred || "";
-  razrednicarkaEl.value = meta.razrednicarka || "";
-  // Če je razredničarka prazna, ne prepisujemo polja prejemnika
-  if (!isEmpty(meta.razrednicarka)) {
-    rIme.value = `ga. ${meta.razrednicarka}`;
+function applyStudentDefaults() {
+  const m = teacherByStudent[studentSel.value];
+  if (m) {
+    if (m.razred) razred.value = m.razred;
+    if (m.razrednicarka) {
+      razrednicarka.value = m.razrednicarka; // read-only field
+      r_ime.value = m.razrednicarka;         // set recipient to match teacher
+    }
   }
 }
-studentEl.addEventListener("change", updateStudentMeta);
-updateStudentMeta();
 
-function buildLetterText() {
-  const parentName = pIme.value.trim();
-  const parentAddr1 = pNaslov1.value.trim();
-  const parentAddr2 = pNaslov2.value.trim();
-  const kraj = pKraj.value.trim() || "Ljubljana";
-  const datumInline = isEmpty(pDatum.value) ? todayStr() : pDatum.value.trim();
+// Keep auto field in sync when user edits the recipient (if they change it manually)
+r_ime.addEventListener('input', () => {
+  razrednicarka.value = r_ime.value || '';
+});
 
-  const recipName = rIme.value.trim();
-  const recipSchool = rSola.value.trim();
-  const recipAddr = rNaslov.value.trim();
+// --- Defaults & init -------------------------------------------------------
 
-  const student = studentEl.value;
-  const razred = razredEl.value.trim();
-  const od = datumOdEl.value.trim();
-  const doo = datumDoEl.value.trim();
-  const vzrok = vzrokEl.value.trim();
-
-  if (isEmpty(student) || isEmpty(razred) || isEmpty(od) || isEmpty(vzrok)) {
-    return null;
+document.addEventListener('DOMContentLoaded', () => {
+  if (!p_datum.value.trim()) {
+    p_datum.value = formatDateSl(new Date());
   }
+  applyStudentDefaults(); // set defaults for initial selection
+});
 
-  let odsotnost;
-  if (isEmpty(doo)) {
-    odsotnost = `je bila odsotna od pouka ${od} zaradi ${vzrok}.`;
+// Update defaults when switching student
+studentSel.addEventListener('change', () => {
+  applyStudentDefaults();
+  generatePreview(); // refresh preview so header shows new recipient immediately
+});
+
+// --- Letter generation ------------------------------------------------------
+
+function buildLetterHTML() {
+  const senderBlock =
+`${p_ime.value}
+${p_naslov1.value}
+${p_naslov2.value}`;
+  const dateLine = `${p_kraj.value}, ${p_datum.value.trim() ? normalizeDateInput(p_datum.value) : formatDateSl(new Date())}`;
+  const recipientBlock =
+`${r_ime.value}
+${r_sola.value}
+${r_naslov.value}
+${r_posta.value}`;
+
+  const učenka = studentSel.value;
+  const razredTxt = razred.value.trim() ? `, učenka ${razred.value.trim()} razreda,` : '';
+
+  const od = normalizeDateInput(datum_od.value.trim());
+  const doo = normalizeDateInput(datum_do.value.trim());
+
+  let odsotnostLine = '';
+  if (od && doo) {
+    odsotnostLine = `je bila odsotna od pouka od ${od} do ${doo} zaradi ${vzrok.value.trim() || '____'}.`;
+  } else if (od) {
+    odsotnostLine = `je bila odsotna od pouka ${od} zaradi ${vzrok.value.trim() || '____'}.`;
   } else {
-    odsotnost = `je bila odsotna od pouka od ${od} do ${doo} zaradi ${vzrok}.`;
+    odsotnostLine = `bo odsotna od pouka zaradi ${vzrok.value.trim() || '____'}.`;
   }
 
-  const lines = [
-    `${parentName}`,
-    `${parentAddr1}`,
-    `${parentAddr2}`,
-    ``,
-    `${kraj}, ${datumInline}`,
-    ``,
-    `---`,
-    //`${recipName}`,
-    //`${recipSchool}`,
-    //`${recipAddr}`,
-    ``,
-    `Spoštovani!`,
-    ``,
-    `Hčerka ${student}, učenka ${razred}, ${odsotnost}`,
-    `Prosim, če izostanek opravičite.`,
-    ``,
-    `S spoštovanjem!`,
-    ``,
-    `${parentName}`
-  ];
-  return lines.join("\n");
+  const bodyPara =
+`OPRAVIČILO
+
+Spoštovani!
+
+Hčerka ${učenka}${razredTxt} ${odsotnostLine}
+Prosim, če izostanek opravičite.
+
+Hvala in lep pozdrav,
+
+${p_ime.value}`;
+
+  return `
+<div>${senderBlock.replace(/\n/g, '<br>')}</div>
+<div>${dateLine}</div>
+<div>${recipientBlock.replace(/\n/g, '<br>')}</div>
+
+<div>${bodyPara.replace(/\n/g, '<br>')}</div>
+`.trim();
 }
 
-function renderPreview() {
-  const txt = buildLetterText();
-  if (txt === null) {
-    preview.textContent = "Izpolnite obvezna polja (učenka, razred, datum od, razlog).";
-  } else {
-    preview.textContent = txt;
+function generatePreview() {
+  if (p_datum.value.trim()) p_datum.value = normalizeDateInput(p_datum.value);
+  if (datum_od.value.trim()) datum_od.value = normalizeDateInput(datum_od.value);
+  if (datum_do.value.trim()) datum_do.value = normalizeDateInput(datum_do.value);
+
+  preview.innerHTML = buildLetterHTML();
+  msg.textContent = 'Pismo je pripravljeno.';
+  setTimeout(() => (msg.textContent = ''), 2000);
+}
+
+// --- Copy & PDF ------------------------------------------------------------
+
+function copyPreviewToClipboard() {
+  const text = preview.innerText;
+  if (!text.trim()) {
+    msg.textContent = 'Ni vsebine za kopiranje.';
+    setTimeout(() => (msg.textContent = ''), 1800);
+    return;
   }
+  navigator.clipboard.writeText(text).then(() => {
+    msg.textContent = 'Kopirano v odložišče.';
+    setTimeout(() => (msg.textContent = ''), 1800);
+  }).catch(() => {
+    msg.textContent = 'Kopiranje ni uspelo.';
+    setTimeout(() => (msg.textContent = ''), 1800);
+  });
 }
 
-function feedback(msg, isError=false) {
-  msgEl.textContent = msg;
-  msgEl.style.color = isError ? "#c62828" : "#2f6fed";
-  setTimeout(() => (msgEl.textContent = ""), 2500);
-}
-
-function generiraj() {
-  const txt = buildLetterText();
-  if (txt === null) return feedback("Manjkajo obvezni podatki.", true);
-  renderPreview();
-  feedback("Pismo generirano.");
-}
-
-async function kopiraj() {
-  const txt = buildLetterText();
-  if (txt === null) return feedback("Najprej izpolnite obvezna polja.", true);
-  try {
-    await navigator.clipboard.writeText(txt);
-    feedback("Kopirano!");
-  } catch (e) {
-    // Fallback
-    const ta = document.createElement("textarea");
-    ta.value = txt;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    document.body.removeChild(ta);
-    feedback("Kopirano!");
+function printPreviewToPDF() {
+  if (!preview.innerHTML.trim()) {
+    generatePreview();
   }
-}
+  const finalHtml = preview.innerHTML;
 
-function saveAsPDF() {
-  const txt = buildLetterText();
-  if (txt === null) return feedback("Najprej izpolnite obvezna polja.", true);
-
-  const parentName = pIme.value.trim();
-  const kraj = (pKraj.value.trim() || "Ljubljana");
-  const datumInline = isEmpty(pDatum.value) ? todayStr() : pDatum.value.trim();
-  const recipName = rIme.value.trim();
-  const recipSchool = rSola.value.trim();
-  const recipAddr = rNaslov.value.trim();
-
-  const safe = (s)=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-
-  const win = window.open("", "_blank", "width=800,height=900");
-  const html = `<!DOCTYPE html>
+  const w = window.open('', '_blank');
+  w.document.write(`<!doctype html>
 <html lang="sl">
 <head>
-  <meta charset="utf-8" />
-  <title>Opravičilo – ${safe(parentName)}</title>
+  <meta charset="utf-8">
+  <title>Opravičilo</title>
+  <link rel="stylesheet" href="style.css">
   <style>
-    @page { size: A4; margin: 2cm; }
-    body { font-family: Arial, sans-serif; margin: 2cm; line-height: 1.5; }
-    .sender { white-space: pre-wrap; }
-    .date { margin-top: 10px; }
-    .divider { margin: 14px 0; height: 1px; background: #aaa; }
-    .recipient { margin-top: 8px; white-space: pre-wrap; }
-    .content { margin-top: 18px; white-space: pre-wrap; }
+    @page { margin: 18mm; }
+    body { font-family: Arial, sans-serif; }
+    .letter-preview { border: none; padding: 0; }
   </style>
 </head>
 <body>
-  <div class="sender">${safe(pIme.value)}\n${safe(pNaslov1.value)}\n${safe(pNaslov2.value)}</div>
-  <div class="date">${safe(kraj)}, ${safe(datumInline)}</div>
-  <div class="divider"></div>
-  <div class="recipient">${safe(recipName)}\n${safe(recipSchool)}\n${safe(recipAddr)}</div>
-  <div class="content">${safe(txt.split('---').pop().trim())}</div>
-  <script>setTimeout(()=>window.print(), 250);</script>
+  <div class="letter-preview">
+    ${finalHtml}
+  </div>
 </body>
-</html>`;
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
+</html>`);
+  w.document.close();
+  w.focus();
+  w.print();
+  w.close();
 }
 
-// Bindings
-genBtn.addEventListener("click", generiraj);
-copyBtn.addEventListener("click", kopiraj);
-pdfBtn.addEventListener("click", saveAsPDF);
+// --- Events ----------------------------------------------------------------
 
-// Live preview updates
-document.querySelectorAll("input, select").forEach(el => {
-  el.addEventListener("input", renderPreview);
-  el.addEventListener("change", renderPreview);
-});
-renderPreview();
+genBtn.addEventListener('click', generatePreview);
+copyBtn.addEventListener('click', copyPreviewToClipboard);
+pdfBtn.addEventListener('click', printPreviewToPDF);
+
+// Generate once so preview isn't empty
+generatePreview();

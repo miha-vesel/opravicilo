@@ -64,13 +64,38 @@ legend {
   min-height: 260px;
   background: #fff;
   white-space: pre-wrap;
-  line-height: 1.6;
-}
-
-.hr-sim {
-  margin: 12px 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #aaa, transparent);
+  line-height: 1.5;
 }
 
 /* Print template will be injected via JS into a popup window */
+
+/* Poseben izgled samo za tisk / PDF */
+@media print {
+  body {
+    font-family: "Times New Roman", serif;
+    font-size: 12pt;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .letter-preview {
+    border: none !important;
+    padding: 0;
+    background: white;
+    min-height: auto;
+  }
+
+  /* skrije gumbe in navodila */
+  .btn-row,
+  h2,
+  fieldset,
+  label {
+    display: none !important;
+  }
+
+  /* da se vsebina lepo postavi kot pismo */
+  #preview {
+    border: none;
+    padding: 0;
+  }
+}
