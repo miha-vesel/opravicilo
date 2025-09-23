@@ -49,7 +49,7 @@ const msg         = $('msg');
 // --- Student → defaults mapping -------------------------------------------
 // Add/adjust values here as needed.
 const teacherByStudent = {
-  'Neli Vesel': { razred: '5.c', razrednicarka: 'ga. Nina Brbot' },
+  'Neli Vesel': { razred: '5.c', razrednicarka: 'ga. Nina Jančič' },
   'Zarja Vesel': { razred: '2.b', razrednicarka: 'ga. Darija Peternelj' },
 };
 
