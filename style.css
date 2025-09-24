@@ -99,3 +99,12 @@ legend {
     padding: 0;
   }
 }
+
+/* Hide first two fieldsets completely */
+fieldset:nth-of-type(1),
+fieldset:nth-of-type(2) {
+  display: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
